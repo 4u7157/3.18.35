@@ -1137,11 +1137,14 @@ err_fw:
 static int send_eject_command(struct usb_interface *interface)
 {
 	struct usb_device *udev = interface_to_usbdev(interface);
-	struct usb_host_interface *iface_desc = &interface->altsetting[0];
+	struct usb_host_interface *iface_desc = interface->cur_altsetting;
 	struct usb_endpoint_descriptor *endpoint;
 	unsigned char *cmd;
 	u8 bulk_out_ep;
 	int r;
+
+	if (iface_desc->desc.bNumEndpoints < 2)
+		return -ENODEV;
 
 	/* Find bulk out endpoint */
 	for (r = 1; r >= 0; r--) {

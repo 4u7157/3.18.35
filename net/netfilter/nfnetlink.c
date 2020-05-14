@@ -321,10 +321,12 @@ replay:
 		nlh = nlmsg_hdr(skb);
 		err = 0;
 
-		if (nlmsg_len(nlh) < sizeof(struct nfgenmsg) ||
-		    skb->len < nlh->nlmsg_len) {
-			err = -EINVAL;
-			goto ack;
+		if (nlh->nlmsg_len < NLMSG_HDRLEN ||
+		    skb->len < nlh->nlmsg_len ||
+		    nlmsg_len(nlh) < sizeof(struct nfgenmsg)) {
+			nfnl_err_reset(&err_list);
+			success = false;
+			goto done;
 		}
 
 		/* Only requests are handled by the kernel */
@@ -484,7 +486,7 @@ static int nfnetlink_bind(int group)
 	ss = nfnetlink_get_subsys(type);
 	rcu_read_unlock();
 	if (!ss)
-		request_module("nfnetlink-subsys-%d", type);
+		request_module_nowait("nfnetlink-subsys-%d", type);
 	return 0;
 }
 #endif
